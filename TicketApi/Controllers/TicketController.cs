@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Azure.Storage.Queues;
+using System.Runtime.InteropServices.Marshalling;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace TicketApi.Controllers
@@ -18,13 +21,43 @@ namespace TicketApi.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok("Hellow from Tickets Controller");
+            return Ok("Hello from Tickets Controller - GET");
         }
 
         [HttpPost]
-        public IActionResult Post(TicketOrder ticketOrder)
+        public async Task<IActionResult> Post(TicketOrder ticketOrder)
         {
-            return StatusCode(StatusCodes.Status201Created);
+            // Validate the ticket information
+            if (ModelState.IsValid == false)
+            {
+                return BadRequest(ModelState);
+            }
+
+            //
+            // Post ticketOrder to Storage Queue
+            //
+
+            string queueName = "tickets";
+
+            // Get connection string from secrets.json
+            string? connectionString = _configuration["AzureStorageConnectionString"];
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                return BadRequest("An error was encountered");
+            }
+
+            QueueClient queueClient = new QueueClient(connectionString, queueName);
+
+            // serialize an object to json
+            string message = JsonSerializer.Serialize(ticketOrder);
+
+            // send string message to queue
+            await queueClient.SendMessageAsync(message);
+
+            return Ok("Success - message posted to Storage Queue");
+
+            //return StatusCode(StatusCodes.Status201Created);
         }
     }
 }
