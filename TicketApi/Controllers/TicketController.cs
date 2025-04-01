@@ -3,6 +3,7 @@ using System.Runtime.InteropServices.Marshalling;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace TicketApi.Controllers
 {
@@ -52,8 +53,12 @@ namespace TicketApi.Controllers
             // serialize an object to json
             string message = JsonSerializer.Serialize(ticketOrder);
 
+            // send string message to queue (must encode as base64 to work properly)
+            var plainTextBytes = Encoding.UTF8.GetBytes(message);
+            await queueClient.SendMessageAsync(Convert.ToBase64String(plainTextBytes));
+
             // send string message to queue
-            await queueClient.SendMessageAsync(message);
+            //await queueClient.SendMessageAsync(message);
 
             return Ok("Success - message posted to Storage Queue");
 
