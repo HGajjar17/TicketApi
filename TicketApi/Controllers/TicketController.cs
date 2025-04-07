@@ -60,7 +60,8 @@ namespace TicketApi.Controllers
             // send string message to queue
             //await queueClient.SendMessageAsync(message);
 
-            return Ok("Success - message posted to Storage Queue");
+            return StatusCode(StatusCodes.Status201Created, new { message = "Success - message posted to Storage Queue" });
+            //return Ok("Success - message posted to Storage Queue");
 
             //return StatusCode(StatusCodes.Status201Created);
         }
